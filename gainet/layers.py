@@ -1,98 +1,60 @@
-"""
-A neural net will be made up of layers.
-Each layers needs to pass its inputs forward
-and propagate gradients backward. For example,
-a neural net might look like
-
-inputs -> Linear -> Tanh -> Linear -> output
-"""
-from typing import Dict, Callable
-
 import numpy as np
-
-from .tensor import Tensor
 
 
 class Layer:
-    def __init__(self) -> None:
+    def __init__(self):
         self.params = {}
         self.grads = {}
 
-    def forward(self, inputs: Tensor) -> Tensor:
-        """
-        Produce the outputs corresponding to these inputs
-        """
+    def forward(self, xs):
         raise NotImplementedError
 
-    def backward(self, grad: Tensor) -> Tensor:
-        """
-        Backpropagate this gradient through the layer
-        """
+    def backward(self, grad):
         raise NotImplementedError
+
 
 class Linear(Layer):
-    """
-    computes output = inputs @ w + b
-    """
-    def __init__(self, input_size: int, output_size: int) -> None:
-        # inputs will be (batch_size, input_size)
-        # outpus will be (batch_size, output_size)
+    def __init__(self, xss, yss):
         super().__init__()
-        self.params["w"] = np.random.randn(input_size, output_size)
-        self.params["b"] = np.random.randn(output_size)
+        self.params['w'] = np.random.randn(xss, yss)
+        self.params['b'] = np.random.randn(yss)
 
-    def forward(self, inputs: Tensor) -> Tensor:
-        """
-        ouputs = inputs @ w + b
-        """
-        self.inputs = inputs
-        return inputs @ self.params["w"] + self.params["b"]
+    def forward(self, xs):
+        self.xs = xs
 
-    def backward(self, grad: Tensor) -> Tensor:
-        """
-        if y = f(x) and x = a * b + c
-        then dy/da = f'(x) * b
-        and dy/db = f'(x) * a
-        and dy/dc = f'(x)
+        return xs @ self.params['w'] + self.params['b']
 
-        if y = f(x) and x = a @ b + c
-        then dy/da = f'(x) @ b.T
-        and dy/db = a.T @ f'(x)
-        and dy/dc = f'(x)
-        """
-        self.grads["b"] = np.sum(grad, axis=0)
-        self.grads["w"] = self.inputs.T @ grad
-        return grad @ self.params["w"].T
+    def backward(self, grad):
+        self.grads['b'] = np.sum(grad, axis=0)
+        self.grads['w'] = self.xs.T @ grad
 
-F = Callable[[Tensor], Tensor]
+        return grad @ self.params['w'].T
+
 
 class Activation(Layer):
-    """
-    An activation layer just applies a function elementwise to its inputs
-    """
-    def __init__(self, f: F, f_prime: F) -> None:
+    def __init__(self, f, f_prime):
         super().__init__()
         self.f = f
         self.f_prime = f_prime
 
-    def forward(self, inputs: Tensor) -> Tensor:
-        self.inputs = inputs
-        return self.f(inputs)
+    def forward(self, xs):
+        self.xs = xs
 
-    def backward(self, grad: Tensor) -> Tensor:
-        """
-        if y = f(x) and x = g(z)
-        then dy/dz = f'(x) * g'(z)
-        """
-        return self.f_prime(self.inputs) * grad
+        return self.f(xs)
+
+    def backward(self, grad):
+        return self.f_prime(self.xs) * grad
 
 
-def tanh(x: Tensor) -> Tensor:
+def tanh(x):
     return np.tanh(x)
 
-def tanh_prime(x: Tensor) -> Tensor:
+
+def tanh_prime(x):
     y = tanh(x)
-    return 1 - y ** 2
+
+    return 1 - y**2
+
 
 class Tanh(Activation):
     def __init__(self):

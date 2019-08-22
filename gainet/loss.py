@@ -1,27 +1,21 @@
-"""
-A loss function measures how good our predictions are,
-we can use this to adjust the parameters of our network
-"""
-
 import numpy as np
-
-from .tensor import Tensor
 
 
 class Loss:
-    def loss(self, predicted: Tensor, actual: Tensor) -> float:
+    def loss(self, predicted, actual):
         raise NotImplementedError
 
-    def grad(self, predicted: Tensor, actual: Tensor) -> Tensor:
+    def grad(self, predicted, actual):
         raise NotImplementedError
+
 
 class MSE(Loss):
     """
-    MSE is mean squared error, although we'are just going to do
-    total squared error
+    Total square error
     """
-    def loss(self, predicted: Tensor, actual: Tensor) -> float:
-        return np.sum((predicted - actual) ** 2)
 
-    def grad(self, predicted: Tensor, actual: Tensor) -> Tensor:
+    def loss(self, predicted, actual):
+        return np.sum((predicted - actual)**2)
+
+    def grad(self, predicted, actual):
         return 2 * (predicted - actual)
